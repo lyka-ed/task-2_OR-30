@@ -1,5 +1,4 @@
 ## Url Status Code Checker
-
 This script runs fetches urls from the CSV file, checks and prints the HTTP status code for each url.
 
 ## Prerequistes

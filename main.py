@@ -13,27 +13,40 @@ def csvReader(csv_path: str):
 
 class UrlStatusCheck:
     @staticmethod
-    def getStatus(url: str) -> int | None:
+    def getStatus(url: str) -> tuple[int | str, str]:
         try:
-            return requests.get(url, timeout=10, allow_redirects=True).status_code
-        except requests.RequestException:
-            return None
+            response = requests.get(url, timeout=10, allow_redirects=True)
+            return response.status_code, "Success"
+        except requests.Timeout:
+            return "Timeout", "Request timed out after 10 seconds"
+        except requests.ConnectionError:
+            return "ConnectionError", "Failed to Connect to url"
+        except requests.RequestException as e:
+            return "Error", f"Unknown request error: {str(e)}"
+        except Exception as e:
+            return "Error", f"Unexpected error: {str(e)}"
 
     def checkUrl(self, csv_path: str) -> None:
         try:
             with csvReader(csv_path) as reader:
+                # Thissi to skip the header row (url)
+                next(reader, None)
+                
                 for row in reader:
                     if not row or not row[0].strip():
                         continue
                     url = row[0].strip()
-                    status = self.getStatus(url)
-                    print(f"({'Error' if status is None else status}) {url}")
+                    status, message = self.getStatus(url)
+                    if status == "Success":
+                        print(f"({status}) {url}")
+                    else:
+                        print(f"({status}) {url} - {message}")
                     time.sleep(1)
         except FileNotFoundError:
             print(f"Error: File '{csv_path}' not found")
         except Exception as e:
             print(f"Error: {str(e)}")
-
+        
 if __name__ == "__main__":
     checker = UrlStatusCheck()
     checker.checkUrl('Task 2 - Intern.csv')
